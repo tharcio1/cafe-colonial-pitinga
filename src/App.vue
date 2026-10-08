@@ -117,7 +117,7 @@ onUnmounted(() => observer?.disconnect())
     <div class="event-strip" id="detalhes">
       <div class="container event-strip-inner">
         <span><Icon name="pin" /> Praia da Pitinga <small>Arraial d’Ajuda</small></span>
-        <span><Icon name="calendar" /> Datas a combinar</span>
+        <span><Icon name="calendar" /> Datas sob consulta prévia</span>
         <span><Icon name="clock" /> Horários sob consulta</span>
       </div>
     </div>
