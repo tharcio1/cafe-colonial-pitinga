@@ -4,6 +4,7 @@ import Icon from './components/Icon.vue'
 
 const name = ref('')
 const phone = ref('')
+const errors = ref({})
 const status = ref('idle')
 const successPanel = ref(null)
 const formElement = ref(null)
@@ -33,11 +34,23 @@ function formatPhone(event) {
     formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, split)}-${digits.slice(split)}`
   }
   phone.value = formatted
+  if (digits) errors.value.phone = ''
   event.target.value = formatted
 }
 
 function submitForm() {
-  // Página de teste: sucesso local, sem validação, armazenamento ou envio de dados.
+  errors.value = {}
+  if (!name.value.trim()) errors.value.name = 'Por favor, preencha seu nome.'
+  if (!phone.value.replace(/\D/g, '')) errors.value.phone = 'Por favor, preencha seu telefone.'
+  if (errors.value.name || errors.value.phone) {
+    nextTick(() => {
+      const field = document.getElementById(errors.value.name ? 'name' : 'phone')
+      field?.focus({ preventScroll: true })
+      field?.scrollIntoView({ block: 'center', behavior: 'instant' })
+    })
+    return
+  }
+  // Página de teste: exige preenchimento, mas não armazena nem envia dados.
   status.value = 'success'
   name.value = ''
   phone.value = ''
@@ -111,11 +124,11 @@ onUnmounted(() => observer?.disconnect())
       <div class="reservation-copy"><p class="eyebrow">SEU PRÓXIMO BOM MOMENTO</p><h2 id="reservation-title">Reserve um tempo<br />para o que <em>faz bem.</em></h2><p>Um encontro especial na Praia da Pitinga.<br />Deixe seu contato e saiba como participar.</p><div class="package-price"><span>EXPERIÊNCIA COMPLETA</span><p><small>R$</small> 250<span>,00</span></p><small>Valor do pacote anunciado</small></div><ul class="package-list"><li><Icon name="check" /> Café colonial compartilhado</li><li><Icon name="check" /> Piquenique à beira-mar</li><li><Icon name="check" /> 5 fotografias profissionais</li></ul><p class="availability">Participação sujeita à disponibilidade.</p></div>
       <div ref="formElement" class="form-card">
         <div class="form-card-header"><Icon name="sunset" /><span>UM CONVITE PARA DESACELERAR</span></div>
-        <div v-if="status === 'success'" ref="successPanel" class="success-panel" role="status" aria-live="polite" tabindex="-1"><span class="success-icon"><Icon name="check" /></span><h3>Solicitação realizada com sucesso!</h3><p>Um dos nossos colaboradores entrará em contato para fornecer todas as informações.</p><p class="form-note">Demonstração: nenhum dado foi enviado.</p></div>
+        <div v-if="status === 'success'" ref="successPanel" class="success-panel" role="status" aria-live="polite" tabindex="-1"><span class="success-icon"><Icon name="check" /></span><h3>Solicitação realizada com sucesso!</h3><p>Um dos nossos colaboradores entrará em contato para fornecer todas as informações.</p></div>
         <template v-else><h3>Vamos viver esse dia?</h3><p class="form-description">Preencha abaixo e a gente entra em contato com você.</p>
           <form @submit.prevent="submitForm" novalidate>
-            <div class="field"><label for="name">Seu nome</label><input id="name" v-model="name" name="name" autocomplete="name" placeholder="Como podemos chamar você?" maxlength="100" /></div>
-            <div class="field"><label for="phone">Seu telefone / WhatsApp</label><input id="phone" :value="phone" @input="formatPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(00) 00000-0000" maxlength="20" aria-describedby="phone-hint" /><small id="phone-hint">Inclua o DDD do seu número.</small></div>
+            <div class="field"><label for="name">Seu nome</label><input id="name" v-model="name" @input="errors.name && $event.target.value.trim() && (errors.name = '')" name="name" autocomplete="name" placeholder="Como podemos chamar você?" maxlength="100" required :aria-invalid="!!errors.name" :aria-describedby="errors.name ? 'name-error' : undefined" /><span v-if="errors.name" id="name-error" class="field-error" role="alert">{{ errors.name }}</span></div>
+            <div class="field"><label for="phone">Seu telefone / WhatsApp</label><input id="phone" :value="phone" @input="formatPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(00) 00000-0000" maxlength="20" required :aria-invalid="!!errors.phone" :aria-describedby="errors.phone ? 'phone-error' : 'phone-hint'" /><span v-if="errors.phone" id="phone-error" class="field-error" role="alert">{{ errors.phone }}</span><small v-else id="phone-hint">Inclua o DDD do seu número.</small></div>
             <button class="button button-primary submit-button" type="submit">Quero participar</button>
             <p class="privacy-note"><Icon name="lock" /> Página de teste: seus dados não serão enviados nem armazenados pelo site.</p>
             <p class="form-note">Esta simulação não realiza pagamento nem reserva.</p>

@@ -23,7 +23,7 @@ O build gera versões WebP responsivas das fotos e os arquivos publicados em `di
 
 ## Formulário em modo de teste — sem envio de e-mail
 
-O formulário é apenas uma demonstração. Ao clicar em **Quero participar**, exibe imediatamente **“Solicitação realizada com sucesso!”** e **“Um dos nossos colaboradores entrará em contato para fornecer todas as informações.”**, mesmo com campos vazios ou inválidos. O botão fixo no celular também exibe essa confirmação.
+O formulário é apenas uma demonstração. Ao clicar em **Quero participar**, exige que nome e telefone estejam preenchidos. Campos vazios exibem um aviso individual e o primeiro campo pendente recebe o foco; nomes contendo apenas espaços também são considerados vazios. Com ambos preenchidos, exibe imediatamente **“Solicitação realizada com sucesso!”** e **“Um dos nossos colaboradores entrará em contato para fornecer todas as informações.”**. A validação verifica apenas o preenchimento, sem confirmar a validade do número. O botão fixo no celular segue a mesma regra.
 
 **Nenhum e-mail é enviado e nenhum contato é transmitido ou armazenado pelo site.** A integração com o FormSubmit foi removida. Não é necessário ativar um provedor nem configurar credenciais. A confirmação funciona até sem conexão, desde que a página já esteja carregada.
 
@@ -54,6 +54,6 @@ Se publicou pela CLI sem integração Git, publique novamente com `npx vercel --
 - Visual mobile-first: `src/style.css` (telas maiores são adaptações com `min-width`).
 - Fotos originais: `imgs/`; versões otimizadas: `public/images/`.
 - Testes de interface: com a prévia rodando na porta 5173 e Chrome instalado, execute `npm run test:ui`. É possível apontar `PREVIEW_URL` para outra prévia local.
-- Testes verificam sucesso com campos vazios, inválidos e preenchidos, botão mobile, teclado e modo offline, além de garantir a ausência de requisições de envio. Capturas ficam em `artifacts/` (não versionadas).
+- Testes verificam avisos para campos vazios, sucesso com ambos preenchidos, botão mobile, teclado e modo offline, além de garantir a ausência de requisições de envio. Capturas ficam em `artifacts/` (não versionadas).
 
 A página apresenta datas e horários sob consulta, sem calendário fixo. Usa as imagens fornecidas como ilustrações, sem inventar avaliações, depoimentos ou contadores de vagas.

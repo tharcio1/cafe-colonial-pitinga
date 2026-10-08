@@ -38,12 +38,39 @@ try {
   }
 
   await page.setViewportSize({ width: 390, height: 844 })
-  for (const scenario of ['empty', 'invalid', 'filled', 'keyboard', 'offline', 'mobile-cta']) {
+  for (const scenario of ['empty', 'name-only', 'phone-only', 'spaces', 'mobile-empty', 'keyboard-empty']) {
     await page.goto(base)
-    if (['invalid', 'filled', 'keyboard'].includes(scenario)) {
-      await page.locator('#name').fill(scenario === 'invalid' ? 'A' : 'Contato de teste')
-      await page.locator('#phone').fill(scenario === 'invalid' ? '123' : '11987654321')
-      if (scenario !== 'invalid') await expect(page.locator('#phone')).toHaveValue('(11) 98765-4321')
+    if (scenario === 'name-only') await page.locator('#name').fill('Contato de teste')
+    if (scenario === 'spaces') await page.locator('#name').fill('   ')
+    if (['phone-only', 'spaces'].includes(scenario)) await page.locator('#phone').fill('11987654321')
+    if (scenario === 'mobile-empty') await page.locator('.mobile-cta button').click()
+    else if (scenario === 'keyboard-empty') await page.locator('#name').press('Enter')
+    else await page.locator('button[type="submit"]').click()
+    const missingName = scenario !== 'name-only'
+    const missingPhone = !['phone-only', 'spaces'].includes(scenario)
+    await expect(page.locator('#name-error')).toHaveCount(missingName ? 1 : 0)
+    await expect(page.locator('#phone-error')).toHaveCount(missingPhone ? 1 : 0)
+    if (missingName) await expect(page.locator('#name-error')).toHaveText('Por favor, preencha seu nome.')
+    if (missingPhone) await expect(page.locator('#phone-error')).toHaveText('Por favor, preencha seu telefone.')
+    await expect(page.locator(missingName ? '#name' : '#phone')).toBeFocused()
+    await expect(page.locator('.success-panel')).toHaveCount(0)
+    expect(submissions).toHaveLength(0)
+    await page.locator('#name').fill('Contato de teste')
+    await page.locator('#phone').fill('11987654321')
+    await expect(page.locator('.field-error')).toHaveCount(0)
+    await page.locator('button[type="submit"]').click()
+    await expect(page.getByRole('status')).toBeVisible()
+    console.log(`Required fields and correction OK: ${scenario}`)
+  }
+
+  for (const scenario of ['filled', 'keyboard', 'offline', 'mobile-cta']) {
+    await page.goto(base)
+    await page.locator('#name').fill('Contato de teste')
+    await page.locator('#phone').fill('11987654321')
+    await expect(page.locator('#phone')).toHaveValue('(11) 98765-4321')
+    if (scenario === 'mobile-cta') {
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }))
+      await expect(page.locator('.mobile-cta')).toBeVisible()
     }
     if (scenario === 'offline') await context.setOffline(true)
     if (scenario === 'mobile-cta') await page.locator('.mobile-cta button').click()
