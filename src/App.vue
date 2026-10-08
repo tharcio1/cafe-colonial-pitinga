@@ -20,7 +20,7 @@ const questions = [
   { question: 'O que está incluído no pacote?', answer: 'Acesso ao café colonial compartilhado em frente à praia, a experiência de piquenique com vista para o mar e as falésias, e 5 fotografias profissionais por casal ou indivíduo.' },
   { question: 'Preciso ir acompanhado?', answer: 'Não. A experiência é ideal para casais e também para quem deseja viver um momento especial individualmente. O café colonial é compartilhado.' },
   { question: 'Como funciona a reserva?', answer: 'Preencha seu nome e telefone. A organização entrará em contato para informar a disponibilidade, esclarecer o valor do pacote e combinar os próximos passos. O envio do formulário não confirma uma reserva nem realiza uma cobrança.' },
-  { question: 'Onde e quando será o encontro?', answer: 'Na Praia da Pitinga, em Arraial d’Ajuda, no dia 9 de outubro de 2026, às 16h30. O ponto exato de encontro será combinado com a organização.' },
+  { question: 'Onde e quando será o encontro?', answer: 'Na Praia da Pitinga, em Arraial d’Ajuda. A data, o horário e o ponto exato de encontro serão combinados diretamente com a organização, conforme a disponibilidade. Deixe seu contato para saber mais.' },
 ]
 
 function formatPhone(event) {
@@ -59,7 +59,7 @@ async function submitForm() {
       body: JSON.stringify({
         Nome: name.value.trim(),
         Telefone: `+55 ${digits}`,
-        Evento: 'Piquenique na Pitinga — 09/10/2026, 16h30',
+        Evento: 'Piquenique na Pitinga',
         _subject: 'Novo interesse — Piquenique na Pitinga',
         _template: 'table',
         _honey: honeypot.value,
@@ -110,15 +110,15 @@ onUnmounted(() => observer?.disconnect())
       <div class="hero-visual">
         <img class="hero-image" src="/images/site1-800.webp" srcset="/images/site1-480.webp 480w, /images/site1-800.webp 800w, /images/site1-1254.webp 1254w" sizes="(min-width: 900px) 53vw, 100vw" width="1254" height="1254" fetchpriority="high" alt="Mesa de piquenique com café, frutas e flores à beira-mar, diante das falésias da Pitinga" />
         <span class="image-label">O MAR. A BRISA. O AGORA.</span>
-        <div class="date-card"><span class="date-number">09<span>OUTUBRO</span></span><span class="date-card-divider"></span><span><strong>Um encontro marcado<br />com a leveza.</strong><small>SEXTA-FEIRA · 16H30 · 2026</small></span></div>
+        <div class="date-card"><Icon name="sunset" /><span class="date-card-divider"></span><span><strong>Um encontro<br />com a leveza.</strong><small>SEU MOMENTO À BEIRA-MAR</small></span></div>
       </div>
     </section>
 
     <div class="event-strip" id="detalhes">
       <div class="container event-strip-inner">
         <span><Icon name="pin" /> Praia da Pitinga <small>Arraial d’Ajuda</small></span>
-        <span><Icon name="calendar" /> 09 de outubro de 2026</span>
-        <span><Icon name="clock" /> A partir das 16h30</span>
+        <span><Icon name="calendar" /> Datas a combinar</span>
+        <span><Icon name="clock" /> Horários sob consulta</span>
       </div>
     </div>
 

@@ -1,6 +1,6 @@
 # Piquenique na Pitinga
 
-Landing page em Vue 3 + Vite, mobile-first, com imagens fornecidas em `imgs/`, fontes locais e formulário de nome e telefone. Data, horário, benefícios e preço foram extraídos do anúncio fornecido: **09/10/2026, às 16h30, pacote de R$ 250,00**. O anúncio não especifica se o preço é por pessoa ou casal, por isso a página usa apenas "pacote". Confirme essas informações antes da divulgação.
+Landing page em Vue 3 + Vite, mobile-first, com imagens fornecidas em `imgs/`, fontes locais e formulário de nome e telefone. A página não exibe datas ou horários fixos: esses detalhes são combinados diretamente com a organização, conforme a disponibilidade. Os benefícios e o preço do **pacote de R$ 250,00** foram extraídos do anúncio fornecido. O anúncio não especifica se o preço é por pessoa ou casal, por isso a página usa apenas "pacote". Confirme essas informações antes da divulgação.
 
 ## Visualizar e compilar
 
@@ -45,6 +45,12 @@ O arquivo `vercel.json` já define Vite, `npm run build` e a pasta `dist`.
 
 Alternativa pela CLI, com autenticação na sua conta: `npx vercel`. Para publicar em produção: `npx vercel --prod`.
 
+### Atualizar um site já publicado
+
+Se o projeto estiver conectado ao GitHub com os deployments automáticos habilitados, faça commit e push das alterações para a branch de produção configurada na Vercel (normalmente `main`). A Vercel compila e publica a atualização automaticamente no mesmo endereço, quando o build termina com sucesso. Salvar os arquivos apenas no computador não atualiza o site público. Pushes em outras branches normalmente geram prévias, não atualizam a produção. Acompanhe o resultado em **Deployments** no painel. Veja a [documentação da integração Git](https://vercel.com/docs/git).
+
+Se publicou pela CLI sem integração Git, publique novamente com `npx vercel --prod` na pasta do projeto atualizado.
+
 **Plano:** a Vercel limita o [Hobby gratuito a uso pessoal e não comercial](https://vercel.com/docs/plans/hobby). Como a página promove um pacote de experiência, confira um plano apropriado antes de publicá-la comercialmente. A compatibilidade técnica com Vercel não significa elegibilidade para o Hobby. Nenhuma publicação é realizada pelo build.
 
 ## Ajustes e verificações
@@ -55,4 +61,4 @@ Alternativa pela CLI, com autenticação na sua conta: `npx vercel`. Para public
 - Testes de interface: com a prévia rodando na porta 5173 e Chrome instalado, execute `npm run test:ui`. É possível apontar `PREVIEW_URL` para outra prévia local.
 - Testes interceptam os envios; não disparam e-mails nem ativam o serviço. Capturas ficam em `artifacts/` (não versionadas).
 
-O evento é fixo; atualize a data e a disponibilidade ou encerre a captação após sua realização. A página usa as imagens fornecidas como ilustrações, sem inventar avaliações, depoimentos ou contadores de vagas.
+A data e o horário são combinados com cada interessado; não há calendário fixo na página nem na identificação do evento enviada por e-mail. A página usa as imagens fornecidas como ilustrações, sem inventar avaliações, depoimentos ou contadores de vagas.
