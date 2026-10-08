@@ -1,12 +1,11 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import Icon from './components/Icon.vue'
 
 const name = ref('')
 const phone = ref('')
-const honeypot = ref('')
 const status = ref('idle')
-const errors = ref({})
+const successPanel = ref(null)
 const formElement = ref(null)
 const showMobileCta = ref(true)
 let observer
@@ -37,44 +36,15 @@ function formatPhone(event) {
   event.target.value = formatted
 }
 
-async function submitForm() {
-  if (status.value === 'sending' || status.value === 'success') return
-  const digits = phone.value.replace(/\D/g, '')
-  errors.value = {}
-  if (name.value.trim().length < 2) errors.value.name = 'Digite seu nome, com pelo menos 2 letras.'
-  if (!/^[1-9]{2}(?:9\d{8}|[2-9]\d{7})$/.test(digits)) errors.value.phone = 'Digite um telefone válido com DDD.'
-  if (Object.keys(errors.value).length) {
-    document.getElementById(errors.value.name ? 'name' : 'phone')?.focus()
-    return
-  }
-  if (honeypot.value) return
-  status.value = 'sending'
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), 20000)
-  try {
-    const response = await fetch('https://formsubmit.co/ajax/tharciothalles2@gmail.com', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-      signal: controller.signal,
-      body: JSON.stringify({
-        Nome: name.value.trim(),
-        Telefone: `+55 ${digits}`,
-        Evento: 'Piquenique na Pitinga',
-        _subject: 'Novo interesse — Piquenique na Pitinga',
-        _template: 'table',
-        _honey: honeypot.value,
-      }),
-    })
-    const result = await response.json()
-    if (!response.ok || !(result.success === true || result.success === 'true')) throw new Error('Submission rejected')
-    status.value = 'success'
-    name.value = ''
-    phone.value = ''
-  } catch {
-    status.value = 'error'
-  } finally {
-    clearTimeout(timeout)
-  }
+function submitForm() {
+  // Página de teste: sucesso local, sem validação, armazenamento ou envio de dados.
+  status.value = 'success'
+  name.value = ''
+  phone.value = ''
+  nextTick(() => {
+    successPanel.value?.focus({ preventScroll: true })
+    successPanel.value?.scrollIntoView({ block: 'center', behavior: 'instant' })
+  })
 }
 
 onMounted(() => {
@@ -141,16 +111,14 @@ onUnmounted(() => observer?.disconnect())
       <div class="reservation-copy"><p class="eyebrow">SEU PRÓXIMO BOM MOMENTO</p><h2 id="reservation-title">Reserve um tempo<br />para o que <em>faz bem.</em></h2><p>Um encontro especial na Praia da Pitinga.<br />Deixe seu contato e saiba como participar.</p><div class="package-price"><span>EXPERIÊNCIA COMPLETA</span><p><small>R$</small> 250<span>,00</span></p><small>Valor do pacote anunciado</small></div><ul class="package-list"><li><Icon name="check" /> Café colonial compartilhado</li><li><Icon name="check" /> Piquenique à beira-mar</li><li><Icon name="check" /> 5 fotografias profissionais</li></ul><p class="availability">Participação sujeita à disponibilidade.</p></div>
       <div ref="formElement" class="form-card">
         <div class="form-card-header"><Icon name="sunset" /><span>UM CONVITE PARA DESACELERAR</span></div>
-        <div v-if="status === 'success'" class="success-panel" role="status" aria-live="polite"><span class="success-icon"><Icon name="check" /></span><h3>Seu interesse foi enviado!</h3><p>Aguarde o contato da organização no número informado para consultar a disponibilidade e combinar os detalhes.</p><p class="form-note">Sua reserva será confirmada diretamente com a organização.</p></div>
+        <div v-if="status === 'success'" ref="successPanel" class="success-panel" role="status" aria-live="polite" tabindex="-1"><span class="success-icon"><Icon name="check" /></span><h3>Solicitação realizada com sucesso!</h3><p>Um dos nossos colaboradores entrará em contato para fornecer todas as informações.</p><p class="form-note">Demonstração: nenhum dado foi enviado.</p></div>
         <template v-else><h3>Vamos viver esse dia?</h3><p class="form-description">Preencha abaixo e a gente entra em contato com você.</p>
-          <form @submit.prevent="submitForm" novalidate :aria-busy="status === 'sending'">
-            <div class="field"><label for="name">Seu nome</label><input id="name" v-model="name" name="name" autocomplete="name" placeholder="Como podemos chamar você?" maxlength="100" required :disabled="status === 'sending'" :aria-invalid="!!errors.name" :aria-describedby="errors.name ? 'name-error' : undefined" /><span v-if="errors.name" id="name-error" class="field-error">{{ errors.name }}</span></div>
-            <div class="field"><label for="phone">Seu telefone / WhatsApp</label><input id="phone" :value="phone" @input="formatPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(00) 00000-0000" maxlength="20" required :disabled="status === 'sending'" :aria-invalid="!!errors.phone" :aria-describedby="errors.phone ? 'phone-error' : 'phone-hint'" /><span v-if="errors.phone" id="phone-error" class="field-error">{{ errors.phone }}</span><small v-else id="phone-hint">Inclua o DDD do seu número.</small></div>
-            <div class="honeypot" aria-hidden="true"><label for="company">Empresa</label><input id="company" v-model="honeypot" name="_honey" tabindex="-1" autocomplete="off" /></div>
-            <button class="button button-primary submit-button" type="submit" :disabled="status === 'sending'"><span v-if="status === 'sending'" class="spinner" aria-hidden="true"></span>{{ status === 'sending' ? 'Enviando seu interesse…' : 'Quero participar' }}</button>
-            <div v-if="status === 'error'" class="form-error" role="alert">Não conseguimos confirmar o envio. Seus dados foram mantidos para você tentar novamente. Se preferir, fale com a organização por <a href="mailto:tharciothalles2@gmail.com">e-mail</a>.</div>
-            <p class="privacy-note"><Icon name="lock" /> Usaremos seu nome e telefone para entrar em contato sobre este encontro.</p>
-            <p class="form-note">Sem pagamento nesta etapa. O envio não garante a reserva.</p>
+          <form @submit.prevent="submitForm" novalidate>
+            <div class="field"><label for="name">Seu nome</label><input id="name" v-model="name" name="name" autocomplete="name" placeholder="Como podemos chamar você?" maxlength="100" /></div>
+            <div class="field"><label for="phone">Seu telefone / WhatsApp</label><input id="phone" :value="phone" @input="formatPhone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="(00) 00000-0000" maxlength="20" aria-describedby="phone-hint" /><small id="phone-hint">Inclua o DDD do seu número.</small></div>
+            <button class="button button-primary submit-button" type="submit">Quero participar</button>
+            <p class="privacy-note"><Icon name="lock" /> Página de teste: seus dados não serão enviados nem armazenados pelo site.</p>
+            <p class="form-note">Esta simulação não realiza pagamento nem reserva.</p>
           </form>
         </template>
       </div>
@@ -160,6 +128,6 @@ onUnmounted(() => observer?.disconnect())
     <div class="closing-line container"><Icon name="heart" /><p>Tem coisas que a gente não leva na mala.<br /><em>Leva na memória.</em></p></div>
   </main>
 
-  <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="#inicio"><Icon name="sunset" class="brand-icon" /><span>Pitinga<span class="brand-subtitle">PIQUENIQUE & MEMÓRIAS</span></span></a><p>Praia da Pitinga · Arraial d’Ajuda, Bahia<br /><span>Um encontro para estar presente.</span></p><details class="privacy-details"><summary>Privacidade</summary><p>Nome e telefone são encaminhados pelo FormSubmit ao e-mail da organização para responder ao seu interesse neste evento. Para solicitar a exclusão ou esclarecer o uso dos seus dados, escreva para <a href="mailto:tharciothalles2@gmail.com">tharciothalles2@gmail.com</a>.</p></details></div><p class="image-disclaimer container">Imagens ilustrativas da experiência. Confirme os detalhes e a disponibilidade com a organização.</p></footer>
-  <div v-show="showMobileCta && status !== 'success'" class="mobile-cta"><span>Um momento para você<strong>R$ 250,00 <small>/ pacote</small></strong></span><a class="button button-primary" href="#interesse">Quero participar</a></div>
+  <footer class="site-footer"><div class="container footer-inner"><a class="brand" href="#inicio"><Icon name="sunset" class="brand-icon" /><span>Pitinga<span class="brand-subtitle">PIQUENIQUE & MEMÓRIAS</span></span></a><p>Praia da Pitinga · Arraial d’Ajuda, Bahia<br /><span>Um encontro para estar presente.</span></p><details class="privacy-details"><summary>Privacidade</summary><p>Esta é uma página de teste. O formulário apenas exibe uma confirmação simulada. Nome e telefone não são enviados por e-mail, compartilhados com serviços externos nem armazenados pelo site.</p></details></div><p class="image-disclaimer container">Imagens ilustrativas da experiência. Confirme os detalhes e a disponibilidade com a organização.</p></footer>
+  <div v-show="showMobileCta && status !== 'success'" class="mobile-cta"><span>Um momento para você<strong>R$ 250,00 <small>/ pacote</small></strong></span><button class="button button-primary" type="button" @click="submitForm">Quero participar</button></div>
 </template>

@@ -1,7 +1,7 @@
 import { chromium, expect } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 
-// Only synthetic contacts are used. Every email request is intercepted locally.
+// Only synthetic contacts are used. Any attempted external request is blocked.
 const browser = await chromium.launch({ channel: 'chrome', headless: true })
 const context = await browser.newContext()
 const page = await context.newPage()
@@ -9,14 +9,14 @@ const base = process.env.PREVIEW_URL || 'http://127.0.0.1:5173'
 const runtimeErrors = []
 page.on('pageerror', error => runtimeErrors.push(error.message))
 await mkdir('artifacts', { recursive: true })
-let submissions = []
-let behavior = 'success'
-await context.route('https://formsubmit.co/**', async route => {
-  submissions.push(route.request().postDataJSON())
-  if (behavior === 'network') return route.abort('failed')
-  if (behavior === 'rejected') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: 'false' }) })
-  await new Promise(resolve => setTimeout(resolve, 250))
-  return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ success: 'true' }) })
+const submissions = []
+await context.route('**/*', async route => {
+  const request = route.request()
+  if (new URL(request.url()).origin !== new URL(base).origin || !['GET', 'HEAD'].includes(request.method()) || ['fetch', 'xhr'].includes(request.resourceType())) {
+    submissions.push({ url: request.url(), method: request.method() })
+    return route.abort('blockedbyclient')
+  }
+  return route.continue()
 })
 
 try {
@@ -38,34 +38,27 @@ try {
   }
 
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.goto(base)
-  await page.locator('.mobile-cta a').click()
-  await expect(page.locator('.mobile-cta')).toBeHidden()
-  await page.locator('button[type="submit"]').click()
-  await expect(page.locator('#name-error')).toBeVisible()
-  await expect(page.locator('#phone-error')).toBeVisible()
-  expect(submissions).toHaveLength(0)
-  await page.locator('#name').fill('Contato de teste')
-  await page.locator('#phone').fill('123')
-  await page.locator('button[type="submit"]').click()
-  expect(submissions).toHaveLength(0)
-  await page.locator('#phone').fill('11987654321')
-  await expect(page.locator('#phone')).toHaveValue('(11) 98765-4321')
-  behavior = 'network'
-  await page.locator('button[type="submit"]').click()
-  await expect(page.locator('[role="alert"]')).toBeVisible()
-  await expect(page.locator('#name')).toHaveValue('Contato de teste')
-  behavior = 'rejected'
-  await page.locator('button[type="submit"]').click()
-  await expect(page.locator('button[type="submit"]')).toBeEnabled()
-  await expect(page.locator('[role="alert"]')).toBeVisible()
-  behavior = 'success'
-  await page.locator('button[type="submit"]').click()
-  await expect(page.locator('button[type="submit"]')).toBeDisabled()
-  await expect(page.locator('.success-panel')).toBeVisible()
-  expect(submissions).toHaveLength(3)
-  expect(submissions[2].Nome).toBe('Contato de teste')
-  expect(submissions[2].Telefone).toBe('+55 11987654321')
+  for (const scenario of ['empty', 'invalid', 'filled', 'keyboard', 'offline', 'mobile-cta']) {
+    await page.goto(base)
+    if (['invalid', 'filled', 'keyboard'].includes(scenario)) {
+      await page.locator('#name').fill(scenario === 'invalid' ? 'A' : 'Contato de teste')
+      await page.locator('#phone').fill(scenario === 'invalid' ? '123' : '11987654321')
+      if (scenario !== 'invalid') await expect(page.locator('#phone')).toHaveValue('(11) 98765-4321')
+    }
+    if (scenario === 'offline') await context.setOffline(true)
+    if (scenario === 'mobile-cta') await page.locator('.mobile-cta button').click()
+    else if (scenario === 'keyboard') await page.locator('#phone').press('Enter')
+    else await page.locator('button[type="submit"]').click()
+    await expect(page.getByRole('status')).toContainText('Solicitação realizada com sucesso!')
+    await expect(page.getByRole('status')).toContainText('Um dos nossos colaboradores entrará em contato para fornecer todas as informações.')
+    await expect(page.getByRole('status')).toBeInViewport()
+    await expect(page.getByRole('status')).toBeFocused()
+    await expect(page.locator('.mobile-cta')).toBeHidden()
+    await expect(page.locator('.form-error, .field-error')).toHaveCount(0)
+    expect(submissions).toHaveLength(0)
+    await context.setOffline(false)
+    console.log(`Simulated success without requests OK: ${scenario}`)
+  }
   await page.screenshot({ path: 'artifacts/form-success.png', fullPage: true })
 
   await page.goto(base)
@@ -74,7 +67,7 @@ try {
   await page.evaluate(() => { document.documentElement.style.fontSize = '200%' })
   if (await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)) throw new Error('Horizontal overflow at 200% font size')
   expect(runtimeErrors).toEqual([])
-  console.log('Validation, phone mask, mobile CTA, failed/rejected/successful submissions, FAQ, 200% text, and JS runtime: OK. No email was sent.')
+  console.log('Simulated success, phone mask, mobile CTA, offline mode, FAQ, 200% text, and JS runtime: OK. No submission requests or emails.')
 } finally {
   await browser.close()
 }

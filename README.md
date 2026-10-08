@@ -21,18 +21,13 @@ npm run preview
 
 O build gera versões WebP responsivas das fotos e os arquivos publicados em `dist/`. Os originais são preservados. O site não usa banco de dados, senha de Gmail nem API paga.
 
-## Envio dos contatos — ativação necessária
+## Formulário em modo de teste — sem envio de e-mail
 
-O formulário usa o [FormSubmit](https://formsubmit.co/) e envia nome, telefone e identificação do evento para **tharciothalles2@gmail.com** via HTTPS. Este endereço é público no código, não é uma credencial. Apenas nome e telefone são solicitados ao visitante. Não há pagamento nem confirmação automática de reserva.
+O formulário é apenas uma demonstração. Ao clicar em **Quero participar**, exibe imediatamente **“Solicitação realizada com sucesso!”** e **“Um dos nossos colaboradores entrará em contato para fornecer todas as informações.”**, mesmo com campos vazios ou inválidos. O botão fixo no celular também exibe essa confirmação.
 
-1. Publique a página no endereço definitivo.
-2. Envie um contato de teste pelo formulário.
-3. Abra `tharciothalles2@gmail.com`, procure a mensagem de ativação do FormSubmit (inclusive em Spam) e confirme o formulário.
-4. Envie um novo teste e confirme o recebimento com nome e telefone corretos antes de divulgar o site.
+**Nenhum e-mail é enviado e nenhum contato é transmitido ou armazenado pelo site.** A integração com o FormSubmit foi removida. Não é necessário ativar um provedor nem configurar credenciais. A confirmação funciona até sem conexão, desde que a página já esteja carregada.
 
-O recebimento real depende dessa ativação e da disponibilidade do serviço externo; a compilação e os testes locais não confirmam entrega na caixa de entrada. Se mudar de domínio, verifique a necessidade de nova ativação. O envio usa a [API AJAX oficial](https://formsubmit.co/ajax-documentation), com validação, campo antispam invisível, bloqueio de duplicidade durante o envio, tempo limite e tratamento de falhas. A resposta de sucesso significa que o serviço aceitou a solicitação, não que a reserva foi confirmada. Não desativamos explicitamente as proteções do serviço.
-
-O aviso de privacidade explica o envio por esse provedor e o contato para exclusão. Não armazenamos os contatos no navegador. Antes de divulgar, confirme as práticas de tratamento dos dados com a organização.
+A mensagem sobre o contato de um colaborador faz parte da simulação: ela não aciona uma equipe nem cria uma reserva. Os avisos do formulário e de privacidade identificam a demonstração. Para captar contatos reais futuramente, será necessário implementar novamente uma integração de envio e validar a entrega.
 
 ## Publicar na Vercel
 
@@ -41,7 +36,7 @@ O arquivo `vercel.json` já define Vite, `npm run build` e a pasta `dist`.
 1. Crie um repositório pessoal no GitHub e envie o projeto inteiro, incluindo `imgs/` e `package-lock.json`. Não envie `node_modules/` ou `dist/`.
 2. Na Vercel, escolha **Import Project → Import**, conecte o GitHub e selecione esse repositório.
 3. Confira: **Framework: Vite**, **Build Command: npm run build**, **Output Directory: dist**. Não há variáveis de ambiente obrigatórias.
-4. Clique em **Deploy**. Depois da publicação, faça a ativação e o teste do formulário acima.
+4. Clique em **Deploy**. Depois da publicação, teste a confirmação simulada do formulário.
 
 Alternativa pela CLI, com autenticação na sua conta: `npx vercel`. Para publicar em produção: `npx vercel --prod`.
 
@@ -55,10 +50,10 @@ Se publicou pela CLI sem integração Git, publique novamente com `npx vercel --
 
 ## Ajustes e verificações
 
-- Conteúdo e destinatário: `src/App.vue`.
+- Conteúdo e confirmação simulada: `src/App.vue`.
 - Visual mobile-first: `src/style.css` (telas maiores são adaptações com `min-width`).
 - Fotos originais: `imgs/`; versões otimizadas: `public/images/`.
 - Testes de interface: com a prévia rodando na porta 5173 e Chrome instalado, execute `npm run test:ui`. É possível apontar `PREVIEW_URL` para outra prévia local.
-- Testes interceptam os envios; não disparam e-mails nem ativam o serviço. Capturas ficam em `artifacts/` (não versionadas).
+- Testes verificam sucesso com campos vazios, inválidos e preenchidos, botão mobile, teclado e modo offline, além de garantir a ausência de requisições de envio. Capturas ficam em `artifacts/` (não versionadas).
 
-A data e o horário são combinados com cada interessado; não há calendário fixo na página nem na identificação do evento enviada por e-mail. A página usa as imagens fornecidas como ilustrações, sem inventar avaliações, depoimentos ou contadores de vagas.
+A página apresenta datas e horários sob consulta, sem calendário fixo. Usa as imagens fornecidas como ilustrações, sem inventar avaliações, depoimentos ou contadores de vagas.
